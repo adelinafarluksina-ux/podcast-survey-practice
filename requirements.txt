@@ -2,4 +2,4 @@ streamlit
 firebase-admin
 pandas
 plotly
-openpyxl
+python-dotenv
