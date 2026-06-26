@@ -1,8 +1,3 @@
-"""
-Учебная практика: Одностраничный сайт-опросник на Streamlit + Firebase
-Тема: Использование подкастов
-"""
-
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -11,9 +6,6 @@ import plotly.express as px
 from datetime import datetime
 import os
 
-# ==========================================
-# 🎨 КАСТОМНЫЕ СТИЛИ (РОЗОВЫЙ ДИЗАЙН)
-# ==========================================
 def local_css():
     st.markdown("""
     <style>
@@ -87,27 +79,27 @@ def local_css():
 
 local_css()
 
-# ==========================================
-# 🔥 ИНИЦИАЛИЗАЦИЯ FIREBASE
-# ==========================================
 def init_firebase():
     """Инициализация подключения к Firebase Firestore."""
     if not firebase_admin._apps:
-        key_path = "serviceAccountKey.json"
-        if not os.path.exists(key_path):
-            st.error("❌ Ошибка: Файл serviceAccountKey.json не найден!")
+        # Сначала пробуем получить ключ из Secrets (для Streamlit Cloud)
+        if "FIREBASE_KEY" in st.secrets:
+            import json
+            cred_dict = json.loads(st.secrets["FIREBASE_KEY"])
+            cred = credentials.Certificate(cred_dict)
+        # Если локально — берём из файла
+        elif os.path.exists("serviceAccountKey.json"):
+            cred = credentials.Certificate("serviceAccountKey.json")
+        else:
+            st.error("❌ Ошибка: Ключ Firebase не найден!")
             st.stop()
         
-        cred = credentials.Certificate(key_path)
         firebase_admin.initialize_app(cred)
     
     return firestore.client()
 
 db = init_firebase()
 
-# ==========================================
-# 🎀 ШАПКА САЙТА (РОЗОВЫЙ ВАРИАНТ 3)
-# ==========================================
 st.markdown("""
 <div class='header-container'>
     <h1 class='header-title'>🎧 Использование подкастов</h1>
@@ -120,9 +112,6 @@ st.markdown("""
 # Разделяем проект на красивую постраничную навигацию через вкладки (Tabs)
 tab1, tab2 = st.tabs(["📋 Пройти анкетирование", "📊 Аналитический интерактивный дашборд"])
 
-# ==========================================
-# 📝 ВКЛАДКА 1: ФОРМА ОПРОСА
-# ==========================================
 with tab1:
     with st.form("podcast_survey_form"):
         
@@ -247,9 +236,6 @@ with tab1:
             except Exception as e:
                 st.error(f"❌ Ошибка при сохранении: {e}")
 
-# ==========================================
-# 📊 ВКЛАДКА 2: ИНТЕРАКТИВНЫЙ ДАШБОРД
-# ==========================================
 with tab2:
     st.subheader("📊 Аналитический интерактивный дашборд (Режим преподавателя)")
     
@@ -352,9 +338,6 @@ with tab2:
     except Exception as e:
         st.error(f"❌ Ошибка генерации аналитических отчетов: {e}")
 
-# ==========================================
-# 🎀 ПОДВАЛ
-# ==========================================
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #d63384; padding: 20px;'>
